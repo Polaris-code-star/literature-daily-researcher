@@ -1,16 +1,16 @@
 name: Literature Daily Research
 on:
   schedule:
-    - cron: '30 15 * * *'
+    - cron: '00 8 * * *'
       timezone: 'Asia/Shanghai'
       
   # 支持手动触发
-  #workflow_dispatch:
-  # inputs:
-  #    search_days:
-  #      description: 'Search recent N days'
-  #      required: false
-  #      default: '2'
+  workflow_dispatch:
+   inputs:
+      search_days:
+        description: 'Search recent N days'
+        required: false
+        default: '2'
 
 jobs:
   research:
