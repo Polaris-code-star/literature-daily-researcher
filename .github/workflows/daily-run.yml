@@ -44,12 +44,6 @@ jobs:
           OPENALEX_API_KEY=${{ secrets.OPENALEX_API_KEY }}
           SEMANTIC_SCHOLAR_API_KEY=${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
           ENABLE_NOTIFICATIONS=true
-          SMTP_HOST=${{ secrets.SMTP_HOST }}
-          SMTP_PORT=${{ secrets.SMTP_PORT }}
-          SMTP_USER=${{ secrets.SMTP_USER }}
-          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
-          SMTP_FROM=${{ secrets.SMTP_FROM }}
-          SMTP_TO=${{ secrets.SMTP_TO }}
           WECHAT_WEBHOOK_URL=${{ secrets.WECHAT_WEBHOOK_URL }}
           DINGTALK_WEBHOOK_URL=${{ secrets.DINGTALK_WEBHOOK_URL }}
           DINGTALK_SECRET=${{ secrets.DINGTALK_SECRET }}
