@@ -719,20 +719,26 @@ class DailyResearchPipeline:
             logger.info("=" * 80)
             logger.info("✅ 任务完成！")
 
-            all_scored_flat = []
-            for source, scored_papers in scored_papers_by_source.items():
-                for p in scored_papers:
-                    all_scored_flat.append(
-                        {
-                            "title": p["title"],
-                            "score": p["score_response"].total_score,
-                            "source": source,
-                            "tldr": p["score_response"].tldr,
-                            "url": p["url"],
-                        }
-                    )
-            all_scored_flat.sort(key=lambda x: x["score"], reverse=True)
-            top_papers = all_scored_flat[: settings.NOTIFICATION_TOP_N]
+all_scored_flat = []
+
+for source, scored_papers in scored_papers_by_source.items():
+    for p in scored_papers:
+        # 只将及格论文加入通知 Top 列表
+        if not p["score_response"].is_qualified:
+            continue
+
+        all_scored_flat.append(
+            {
+                "title": p["title"],
+                "score": p["score_response"].total_score,
+                "source": source,
+                "tldr": p["score_response"].tldr,
+                "url": p["url"],
+            }
+        )
+
+all_scored_flat.sort(key=lambda x: x["score"], reverse=True)
+top_papers = all_scored_flat[: settings.NOTIFICATION_TOP_N]
 
             run_result = RunResult(
                 run_timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
