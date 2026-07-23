@@ -575,7 +575,7 @@ class NotifierAgent:
                 title = p.get("title", "")[:60]
                 score = p.get("score", 0)
                 src = p.get("source", "").upper()
-                tldr = p.get("tldr", "")[:80]
+                tldr = p.get("tldr", "")[:300]
                 url = p.get("url", "")
                 top_lines.append(f"> **{i}.** `{src}` {title}")
                 top_lines.append(f'> <font color="comment">Score: {score:.1f} | {tldr}</font>')
