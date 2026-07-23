@@ -20,17 +20,12 @@
 #
 # 修改此文件即可自定义成功通知的样式和内容。
 
-## ArXiv Daily Researcher
+## 📚 文献日报
 
-<font color="info">**运行成功**</font> | {timestamp}
+{timestamp}
 
-**本次运行统计**
-> 抓取 <font color="info">**{total_fetched}**</font> 篇 | 及格 <font color="info">**{total_qualified}**</font> 篇 | 深度分析 <font color="info">**{total_analyzed}**</font> 篇
+本次共抓取 **{total_fetched}** 篇论文，筛选出 **{total_qualified}** 篇相关论文。
 
-{source_summary}
-
-{token_usage_section}
+---
 
 {top_papers}
-
-{report_list}
