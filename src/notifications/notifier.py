@@ -542,15 +542,22 @@ class NotifierAgent:
         template = _load_template(template_name)
 
         # 构建各数据源统计文本
-        source_lines = []
-        for source in sorted(result.papers_by_source.keys()):
-            fetched = result.papers_by_source.get(source, 0)
-            qualified = result.qualified_by_source.get(source, 0)
-            analyzed = result.analyzed_by_source.get(source, 0)
-            source_lines.append(
-                f"> `{source.upper()}` 抓取 **{fetched}** | 及格 **{qualified}** | 分析 **{analyzed}**"
-            )
-        source_summary = "\n".join(source_lines)
+    source_lines = []
+
+    for source in sorted(result.papers_by_source.keys()):
+        fetched = result.papers_by_source.get(source, 0)
+        qualified = result.qualified_by_source.get(source, 0)
+        analyzed = result.analyzed_by_source.get(source, 0)
+
+    # 全是 0 的期刊不显示
+    if fetched == 0 and qualified == 0 and analyzed == 0:
+        continue
+
+    source_lines.append(
+        f"> `{source.upper()}` 及格 **{qualified}** 篇"
+    )
+
+    source_summary = "\n".join(source_lines)
 
         # 构建报告路径文本
         report_lines = []
