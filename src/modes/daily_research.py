@@ -59,7 +59,7 @@ def _score_single_paper(
     )
 
     abstract_cn = ""
-    if paper.abstract and paper.abstract.strip():
+    if score_response.is_qualified and paper.abstract and paper.abstract.strip():
         abstract_hash = hashlib.md5(paper.abstract.encode("utf-8")).hexdigest()
 
         with cache_lock:
