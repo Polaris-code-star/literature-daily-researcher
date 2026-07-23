@@ -602,16 +602,8 @@ class NotifierAgent:
         template_name = "success" if result.success else "failure"
         template = _load_template(template_name)
 
-        # 构建各数据源统计文本
-        source_lines = []
-        for source in sorted(result.papers_by_source.keys()):
-            fetched = result.papers_by_source.get(source, 0)
-            qualified = result.qualified_by_source.get(source, 0)
-            analyzed = result.analyzed_by_source.get(source, 0)
-            source_lines.append(
-                f"> `{source.upper()}` 抓取 **{fetched}** | 及格 **{qualified}** | 分析 **{analyzed}**"
-            )
-        source_summary = "\n".join(source_lines)
+       # 钉钉通知不显示报告路径
+        report_list = ""
 
         # 构建报告路径文本
         report_lines = []
