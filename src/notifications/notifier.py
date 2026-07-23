@@ -531,8 +531,33 @@ class NotifierAgent:
             f'Token 消耗: <strong style="color:#6b7280;">{total:,}</strong> tokens'
             f'（输入 {tp:,} / 输出 {tc:,}）</p></td></tr>'
         )
+    def _pretty_source_name(self, source: str) -> str:
+        """将内部期刊代码转换为正常显示名称"""
+        mapping = {
+            "advanced_materials": "Advanced Materials",
+            "acs_applied_materials_interfaces": "ACS Applied Materials & Interfaces",
+            "journal_of_materials_chemistry_a": "Journal of Materials Chemistry A",
+            "carbohydrate_polymers": "Carbohydrate Polymers",
+            "advanced_functional_materials": "Advanced Functional Materials",
+            "chemical_engineering_journal": "Chemical Engineering Journal",
+            "composites_part_b_engineering": "Composites Part B: Engineering",
+            "acs_nano": "ACS Nano",
+            "advanced_materials_technologies": "Advanced Materials Technologies",
+            "cellulose": "Cellulose",
+            "coatings": "Coatings",
+            "nano_micro_letters": "Nano-Micro Letters",
+            "progress_in_organic_coatings": "Progress in Organic Coatings",
+            "small": "Small",
+            "advanced_fiber_materials": "Advanced Fiber Materials",
+            "surfaces_and_interfaces": "Surfaces and Interfaces",
+        }
 
+        return mapping.get(
+            source.lower(),
+            source.replace("_", " ").title()
+        )
     def _format_subject(self, result: RunResult) -> str:
+      
         status = "SUCCESS" if result.success else "FAILED"
         return f"ArXiv Daily Researcher - {status} ({result.run_timestamp})"
 
@@ -572,15 +597,24 @@ class NotifierAgent:
         if result.top_papers:
             top_lines.append(f"**Top {len(result.top_papers)} 论文**")
             for i, p in enumerate(result.top_papers, 1):
-                title = p.get("title", "")[:60]
-                score = p.get("score", 0)
-                src = p.get("source", "").upper()
-                tldr = p.get("tldr", "")[:300]
-                url = p.get("url", "")
-                top_lines.append(f"> **{i}.** `{src}` {title}")
-                top_lines.append(f'> <font color="comment">Score: {score:.1f} | {tldr}</font>')
-                if url:
-                    top_lines.append(f"> [查看原文]({url})")
+            title = p.get("title", "")[:120]
+            score = p.get("score", 0)
+            src = p.get("source", "").upper()
+            tldr = p.get("tldr", "")[:300]
+            url = p.get("url", "")
+
+            top_lines.append(f"### {i}. {title}")
+            top_lines.append(f"> **期刊：** {src}")
+            top_lines.append(f"> **相关性评分：** {score:.1f} / 100")
+            top_lines.append("")
+            top_lines.append(f"> **论文概要：** {tldr}")
+
+if url:
+    top_lines.append(f"> 👉 [查看原文]({url})")
+
+top_lines.append("")
+top_lines.append("---")
+top_lines.append("")
         top_papers = "\n".join(top_lines)
 
         if template:
@@ -627,7 +661,7 @@ class NotifierAgent:
             for i, p in enumerate(result.top_papers, 1):
                 title = p.get("title", "")[:60]
                 score = p.get("score", 0)
-                src = p.get("source", "").upper()
+                src = self._pretty_source_name(p.get("source", ""))
                 tldr = p.get("tldr", "")[:80]
                 url = p.get("url", "")
                 top_lines.append(f"> **{i}.** `{src}` {title}")
