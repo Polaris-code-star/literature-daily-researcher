@@ -343,7 +343,7 @@ class AnalysisAgent:
   "keyword_scores": {{"关键词1": 8.0, "关键词2": 5.0, ...}},
   "expert_authors_found": ["Author1", "Author2"],
   "reasoning": "详细的评分理由和分析",
-  "tldr": "一句话总结论文研究的核心问题和主要结果",
+  "tldr": "用中文生成约80-120字的论文概要，简要概括研究目标、主要材料或方法、关键结果和研究意义。优先保留摘要中明确给出的重要定量数据，不得编造。",
   "extracted_keywords": ["keyword1", "keyword2", "keyword3", ...]
 }}
 
