@@ -732,7 +732,7 @@ for source, scored_papers in scored_papers_by_source.items():
                 "title": p["title"],
                 "score": p["score_response"].total_score,
                 "source": source,
-                "tldr": p["score_response"].tldr,
+                "tldr": p.get("abstract_cn") or p["score_response"].tldr,
                 "url": p["url"],
             }
         )
