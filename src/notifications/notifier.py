@@ -633,37 +633,60 @@ class NotifierAgent:
 
     def _format_body_for_platform(self, result: RunResult, platform: Optional[str]) -> str:
         """使用模板格式化运行结果通知正文，模板不存在时降级为纯文本"""
+
         if platform == "telegram":
             return self._format_telegram_body(result)
 
         template_name = "success" if result.success else "failure"
         template = _load_template(template_name)
 
-       # 钉钉通知不显示报告路径
-        report_list = ""
+        # 构建数据源统计，只保留有结果的数据源
+        source_lines = []
 
-        # 构建报告路径文本
-        report_lines = []
-        if result.report_paths:
-            report_lines.append("**报告路径**")
-            for source, path in result.report_paths.items():
-                report_lines.append(f"> `{source}` {path}")
-        report_list = "\n".join(report_lines)
+        for source in sorted(result.papers_by_source.keys()):
+            fetched = result.papers_by_source.get(source, 0)
+            qualified = result.qualified_by_source.get(source, 0)
+            analyzed = result.analyzed_by_source.get(source, 0)
+
+            # 全是 0 的期刊不显示
+            if fetched == 0 and qualified == 0 and analyzed == 0:
+                continue
+
+            source_lines.append(
+                f"> `{source.upper()}` 及格 **{qualified}** 篇"
+            )
+
+        source_summary = "\n".join(source_lines)
+
+        # 钉钉通知不显示报告路径
+        report_list = ""
 
         # 构建 Top-N 论文文本
         top_lines = []
+
         if result.top_papers:
             top_lines.append(f"**Top {len(result.top_papers)} 论文**")
+
             for i, p in enumerate(result.top_papers, 1):
-                title = p.get("title", "")[:60]
+                title = p.get("title", "")[:120]
                 score = p.get("score", 0)
                 src = self._pretty_source_name(p.get("source", ""))
-                tldr = p.get("tldr", "")[:80]
+                tldr = p.get("tldr", "")[:300]
                 url = p.get("url", "")
-                top_lines.append(f"> **{i}.** `{src}` {title}")
-                top_lines.append(f'> <font color="comment">Score: {score:.1f} | {tldr}</font>')
+
+                top_lines.append(f"### {i}. {title}")
+                top_lines.append(f"> **期刊：** {src}")
+                top_lines.append(f"> **相关性评分：** {score:.1f} / 100")
+                top_lines.append("")
+                top_lines.append(f"> **论文概要：** {tldr}")
+
                 if url:
-                    top_lines.append(f"> [查看原文]({url})")
+                    top_lines.append(f"> 👉 [查看原文]({url})")
+
+                top_lines.append("")
+                top_lines.append("---")
+                top_lines.append("")
+
         top_papers = "\n".join(top_lines)
 
         if template:
