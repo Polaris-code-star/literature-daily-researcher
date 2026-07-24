@@ -581,11 +581,10 @@ class NotifierAgent:
     source_lines.append(
         f"> `{source.upper()}` 及格 **{qualified}** 篇"
     )
-
-    source_summary = "\n".join(source_lines)
+        source_summary = "\n".join(source_lines)
 
         # 钉钉通知不显示报告路径
-    report_list = ""
+        report_list = ""
 
         # 构建 Top-N 论文文本
         top_lines = []
