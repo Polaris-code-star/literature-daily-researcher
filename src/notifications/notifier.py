@@ -588,29 +588,30 @@ class NotifierAgent:
     report_list = ""
 
         # 构建 Top-N 论文文本
-    top_lines = []
-    if result.top_papers:
-        top_lines.append(f"**Top {len(result.top_papers)} 论文**")
-        for i, p in enumerate(result.top_papers, 1):
-            title = p.get("title", "")[:120]
-            score = p.get("score", 0)
-            src = self._pretty_source_name(p.get("source", ""))
-            tldr = p.get("tldr", "")[:300]
-            url = p.get("url", "")
+        top_lines = []
+        if result.top_papers:
+            top_lines.append(f"**Top {len(result.top_papers)} 论文**")
+            for i, p in enumerate(result.top_papers, 1):
+                title = p.get("title", "")[:120]
+                score = p.get("score", 0)
+                src = self._pretty_source_name(p.get("source", ""))
+                tldr = p.get("tldr", "")[:300]
+                url = p.get("url", "")
 
-            top_lines.append(f"### {i}. {title}")
-            top_lines.append(f"> **期刊：** {src}")
-            top_lines.append(f"> **相关性评分：** {score:.1f} / 100")
-            top_lines.append("")
-            top_lines.append(f"> **论文概要：** {tldr}")
+                top_lines.append(f"### {i}. {title}")
+                top_lines.append(f"> **期刊：** {src}")
+                top_lines.append(f"> **相关性评分：** {score:.1f} / 100")
+                top_lines.append("")
+                top_lines.append(f"> **论文概要：** {tldr}")
 
-            if url:
-                top_lines.append(f"> 👉 [查看原文]({url})")
+                if url:
+                    top_lines.append(f"> 👉 [查看原文]({url})")
 
-            top_lines.append("")
-            top_lines.append("---")
-            top_lines.append("")
-      top_papers = "\n".join(top_lines)
+                top_lines.append("")
+                top_lines.append("---")
+                top_lines.append("")
+
+        top_papers = "\n".join(top_lines)
 
         if template:
             return _render_template(
