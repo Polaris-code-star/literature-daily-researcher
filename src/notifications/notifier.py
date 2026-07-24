@@ -261,23 +261,22 @@ class WebhookNotifier(BaseNotifier):
             url,
             json=payload,
             headers=headers,
-            timeout=30
+            timeout=30,
         )
-
         resp.raise_for_status()
 
         # 钉钉需要额外检查业务返回结果
         if self.platform == "dingtalk":
             try:
-               data = resp.json()
-            except ValueError:
+                data = resp.json()
+            except ValueError as exc:
                 raise RuntimeError(
                     f"钉钉返回了非 JSON 响应: {resp.text}"
-                )
+                ) from exc
 
             if data.get("errcode") != 0:
                 raise RuntimeError(
-                    f"钉钉通知发送失败: "
+                    "钉钉通知发送失败: "
                     f"errcode={data.get('errcode')}, "
                     f"errmsg={data.get('errmsg')}"
                 )
@@ -298,22 +297,30 @@ class WebhookNotifier(BaseNotifier):
         """钉钉机器人（支持签名验证）"""
         url = self.webhook_url
         secret = self.extra.get("secret", "")
+
         if secret:
             timestamp = str(round(time.time() * 1000))
             string_to_sign = f"{timestamp}\n{secret}"
             hmac_code = hmac.new(
-                secret.encode("utf-8"), string_to_sign.encode("utf-8"), digestmod=hashlib.sha256
+                secret.encode("utf-8"),
+                string_to_sign.encode("utf-8"),
+                digestmod=hashlib.sha256,
             ).digest()
             sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
             url = f"{url}&timestamp={timestamp}&sign={sign}"
 
+        # 确保钉钉自定义关键词校验能够命中“文献日报”
+        dingtalk_body = body
+        if "文献日报" not in dingtalk_body:
+            dingtalk_body = f"## 文献日报\n\n{dingtalk_body}"
+
         payload = {
-    "msgtype": "markdown",
-    "markdown": {
-        "title": f"文献日报 - {subject}",
-        "text": f"## 文献日报\n\n{body}"
-    }
-}
+            "msgtype": "markdown",
+            "markdown": {
+                "title": f"文献日报 - {subject}",
+                "text": dingtalk_body,
+            },
+        }
         return url, payload, {"Content-Type": "application/json"}
 
     def _format_telegram(self, subject: str, body: str):
@@ -557,115 +564,43 @@ class NotifierAgent:
             source.replace("_", " ").title()
         )
     def _format_subject(self, result: RunResult) -> str:
-      
         status = "SUCCESS" if result.success else "FAILED"
-        return f"ArXiv Daily Researcher - {status} ({result.run_timestamp})"
+        return f"文献日报 - {status} ({result.run_timestamp})"
 
     def _format_body(self, result: RunResult) -> str:
         """向后兼容：默认使用通用模板（非 Telegram 专用）"""
-        template_name = "success" if result.success else "failure"
-        template = _load_template(template_name)
-
-        # 构建各数据源统计文本
-    source_lines = []
-
-    for source in sorted(result.papers_by_source.keys()):
-        fetched = result.papers_by_source.get(source, 0)
-        qualified = result.qualified_by_source.get(source, 0)
-        analyzed = result.analyzed_by_source.get(source, 0)
-
-    # 全是 0 的期刊不显示
-    if fetched == 0 and qualified == 0 and analyzed == 0:
-        continue
-
-    source_lines.append(
-        f"> `{source.upper()}` 及格 **{qualified}** 篇"
-    )
-        source_summary = "\n".join(source_lines)
-
-        # 钉钉通知不显示报告路径
-        report_list = ""
-
-        # 构建 Top-N 论文文本
-        top_lines = []
-        if result.top_papers:
-            top_lines.append(f"**Top {len(result.top_papers)} 论文**")
-            for i, p in enumerate(result.top_papers, 1):
-                title = p.get("title", "")[:120]
-                score = p.get("score", 0)
-                src = self._pretty_source_name(p.get("source", ""))
-                tldr = p.get("tldr", "")[:300]
-                url = p.get("url", "")
-
-                top_lines.append(f"### {i}. {title}")
-                top_lines.append(f"> **期刊：** {src}")
-                top_lines.append(f"> **相关性评分：** {score:.1f} / 100")
-                top_lines.append("")
-                top_lines.append(f"> **论文概要：** {tldr}")
-
-                if url:
-                    top_lines.append(f"> 👉 [查看原文]({url})")
-
-                top_lines.append("")
-                top_lines.append("---")
-                top_lines.append("")
-
-        top_papers = "\n".join(top_lines)
-
-        if template:
-            return _render_template(
-                template,
-                status="SUCCESS" if result.success else "FAILED",
-                timestamp=result.run_timestamp,
-                total_fetched=result.total_papers_fetched,
-                total_qualified=result.total_qualified,
-                total_analyzed=result.total_analyzed,
-                source_summary=source_summary,
-                report_list=report_list,
-                top_papers=top_papers,
-                error_message=result.error_message or "无",
-                token_usage_section=self._format_token_section_md(result.token_usage),
-            )
-
-        # 模板不存在时降级为纯文本
-        return self._format_body_fallback(result)
+        return self._format_body_for_platform(result, None)
 
     def _format_body_for_platform(self, result: RunResult, platform: Optional[str]) -> str:
         """使用模板格式化运行结果通知正文，模板不存在时降级为纯文本"""
-
         if platform == "telegram":
             return self._format_telegram_body(result)
 
         template_name = "success" if result.success else "failure"
         template = _load_template(template_name)
 
-        # 构建数据源统计，只保留有结果的数据源
+        # 构建各数据源统计文本：仅保留有数据的来源
         source_lines = []
-
         for source in sorted(result.papers_by_source.keys()):
             fetched = result.papers_by_source.get(source, 0)
             qualified = result.qualified_by_source.get(source, 0)
             analyzed = result.analyzed_by_source.get(source, 0)
 
-            # 全是 0 的期刊不显示
             if fetched == 0 and qualified == 0 and analyzed == 0:
                 continue
 
             source_lines.append(
-                f"> `{source.upper()}` 及格 **{qualified}** 篇"
+                f"> `{self._pretty_source_name(source)}` 及格 **{qualified}** 篇"
             )
 
         source_summary = "\n".join(source_lines)
 
-        # 钉钉通知不显示报告路径
+        # 钉钉/通用通知不显示报告路径
         report_list = ""
 
         # 构建 Top-N 论文文本
         top_lines = []
-
         if result.top_papers:
-            top_lines.append(f"**Top {len(result.top_papers)} 论文**")
-
             for i, p in enumerate(result.top_papers, 1):
                 title = p.get("title", "")[:120]
                 score = p.get("score", 0)
@@ -703,7 +638,6 @@ class NotifierAgent:
                 token_usage_section=self._format_token_section_md(result.token_usage),
             )
 
-        # 模板不存在时降级为纯文本
         return self._format_body_fallback(result)
 
     def _format_telegram_body(self, result: RunResult) -> str:
