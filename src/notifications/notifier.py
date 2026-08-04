@@ -605,11 +605,13 @@ class NotifierAgent:
                 title = p.get("title", "")[:120]
                 score = p.get("score", 0)
                 src = self._pretty_source_name(p.get("source", ""))
+                published = p.get("published", "N/A")
                 tldr = p.get("tldr", "")[:300]
                 url = p.get("url", "")
 
                 top_lines.append(f"### {i}. {title}")
                 top_lines.append(f"> **期刊：** {src}")
+                top_lines.append(f"> **发布日期：** {published}")
                 top_lines.append(f"> **相关性评分：** {score:.1f} / 100")
                 top_lines.append("")
                 top_lines.append(f"> **论文概要：** {tldr}")
