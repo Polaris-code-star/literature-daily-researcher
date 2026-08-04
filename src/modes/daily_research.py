@@ -732,6 +732,7 @@ class DailyResearchPipeline:
                            "title": p["title"],
                            "score": p["score_response"].total_score,
                            "source": source,
+                           "published": p.get("published", "N/A"),
                            "tldr": p.get("abstract_cn") or p["score_response"].tldr,
                            "url": p["url"],
                         }
